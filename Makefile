@@ -33,6 +33,15 @@ clean:
 	rm -f st $(OBJ) st-$(VERSION).tar.gz
 	rm -f config.h
 
+patch:
+	patch -p0 < clipboard.diff
+	patch -p0 < customization.diff
+	patch -p0 < delkey.diff
+	patch -p0 < vertcenter.diff
+	patch -p0 < solarized1.diff
+	patch -p0 < solarized2.diff
+	patch -p0 < solarized3.diff
+
 dist: clean
 	mkdir -p st-$(VERSION)
 	cp -R FAQ LEGACY TODO LICENSE Makefile README config.mk\
@@ -55,4 +64,4 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/st
 	rm -f $(DESTDIR)$(MANPREFIX)/man1/st.1
 
-.PHONY: all options clean dist install uninstall
+.PHONY: all options clean patch dist install uninstall

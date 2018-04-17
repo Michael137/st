@@ -1,0 +1,13 @@
+--- x.c	2018-04-17 22:58:56.702116186 +0100
++++ x.c	2018-04-17 22:59:32.004342153 +0100
+@@ -760,8 +760,8 @@
+ 
+ 	for (i = 0; i < dc.collen; i++)
+ 		if (!xloadcolor(i, NULL, &dc.col[i])) {
+-			if (colorname[i])
+-				die("could not allocate color '%s'\n", colorname[i]);
++			if (getcolorname(i))
++				die("could not allocate color '%s'\n", getcolorname(i));
+ 			else
+ 				die("could not allocate color %d\n", i);
+ 		}
