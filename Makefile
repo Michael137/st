@@ -9,6 +9,10 @@ OBJ = $(SRC:.c=.o)
 
 all: options st
 
+ifneq ($(STDEBUG),"1")
+STCFLAGS += -g -O0
+endif
+
 options:
 	@echo st build options:
 	@echo "CFLAGS  = $(STCFLAGS)"
@@ -64,4 +68,4 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/st
 	rm -f $(DESTDIR)$(MANPREFIX)/man1/st.1
 
-.PHONY: all options clean patch dist install uninstall
+.PHONY: all options clean dist install uninstall
