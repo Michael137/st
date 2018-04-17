@@ -153,7 +153,7 @@
  	dc.col = xmalloc(dc.collen * sizeof(Color));
  
  	if (loaded) {
-@@ -760,8 +763,8 @@ xloadcols(void)
+@@ -744,8 +753,8 @@ xloadcols(void)
  
  	for (i = 0; i < dc.collen; i++)
  		if (!xloadcolor(i, NULL, &dc.col[i])) {
@@ -164,7 +164,7 @@
  			else
  				die("Could not allocate color %d\n", i);
  		}
-@@ -1085,13 +1101,13 @@ xinit(int cols, int rows)
+@@ -1082,13 +1106,13 @@ xinit(int cols, int rows)
  	cursor = XCreateFontCursor(xw.dpy, mouseshape);
  	XDefineCursor(xw.dpy, xw.win, cursor);
  
