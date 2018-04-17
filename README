@@ -10,5 +10,6 @@ st terminal fork based on 0.8.1 release
 = Installation
 git clone https://github.com/Michael137/st.git
 make patch
-sudo make install
+make all
+make install
 st
