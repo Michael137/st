@@ -42,9 +42,7 @@ patch:
 	patch -p0 < customization.diff
 	patch -p0 < delkey.diff
 	patch -p0 < vertcenter.diff
-#	patch -p0 < solarized1.diff
-#	patch -p0 < solarized2.diff
-#	patch -p0 < solarized3.diff
+#	patch -p0 < copyurl.diff
 
 dist: clean
 	mkdir -p st-$(VERSION)
