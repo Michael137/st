@@ -54,7 +54,8 @@
 +               "abcdefghijklmnopqrstuvwxyz"
 +               "0123456789-._~:/?#@!$&'*+,;=%";
 +
-+       tsetcolor( sel.nb.y, sel.ob.x, sel.oe.x - sel.ob.x + 1, defaultfg, defaultbg );
++		if(sel.oe.x >= 0 && sel.ob.x >= 0)
++	       tsetcolor( sel.nb.y, sel.ob.x, sel.oe.x + 1, defaultfg, defaultbg );
 +
 +       int i, row, startrow;
 +       char *linestr = calloc(sizeof(char), term.col+1); /* assume ascii */
@@ -91,7 +92,7 @@
 +                               break;
 +                       }
 +
-+               tsetcolor( row, sel.ob.x, strlen( match ), defaultbg, defaultfg );
++               tsetcolor( row, sel.ob.x, sel.ob.x + strlen( match ), defaultbg, defaultfg );
 +
 +               /* select and copy */
 +               sel.mode = 1;
