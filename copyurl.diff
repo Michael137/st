@@ -1,15 +1,15 @@
---- config.def.h	2018-05-13 03:47:35.076359105 +0100
-+++ config.def.h	2018-05-13 03:48:31.453673761 +0100
+--- config.def.h	2018-05-20 11:44:12.934940016 +0100
++++ config.def.h	2018-05-20 11:50:51.074944798 +0100
 @@ -178,6 +178,7 @@
  	{ TERMMOD,              XK_Y,           selpaste,       {.i =  0} },
  	{ TERMMOD,              XK_Num_Lock,    numlock,        {.i =  0} },
  	{ TERMMOD,              XK_I,           iso14755,       {.i =  0} },
-+	{ MODKEY,				XK_c,			copyurl,		{.i =  0} },
++	{ MODKEY,               XK_c,           copyurl,        {.i =  0} },
  };
  
  /*
---- st.c	2018-05-13 03:51:40.929198459 +0100
-+++ st.c	2018-05-13 03:57:14.677129097 +0100
+--- st.c	2018-05-20 11:40:02.524909358 +0100
++++ st.c	2018-05-20 11:52:32.038278253 +0100
 @@ -204,6 +204,7 @@
  static int32_t tdefcolor(int *, int *, int);
  static void tdeftran(char);
@@ -24,92 +24,128 @@
  void
 +tsetcolor( int row, int start, int end, uint32_t fg, uint32_t bg )
 +{
-+       int i = start;
-+       for( ; i < end; ++i )
-+       {
-+               term.line[row][i].fg = fg;
-+               term.line[row][i].bg = bg;
-+       }
++	int i = start;
++	for( ; i < end; ++i )
++	{
++		term.line[row][i].fg = fg;
++		term.line[row][i].bg = bg;
++	}
 +}
 +
 +void
  csihandle(void)
  {
  	char buf[40];
-@@ -2617,3 +2629,70 @@
+@@ -2617,3 +2629,107 @@
  	tfulldirt();
  	draw();
  }
 +
-+/* select and copy the previous url on screen (do nothing if there's no url).
-+ * known bug: doesn't handle urls that span multiple lines (wontfix)
-+ * known bug: only finds first url on line (mightfix)
-+ */
-+void
-+copyurl(const Arg *arg) {
-+       /* () and [] can appear in urls, but excluding them here will reduce false
-+        * positives when figuring out where a given url ends.
-+        */
-+       static char URLCHARS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-+               "abcdefghijklmnopqrstuvwxyz"
-+               "0123456789-._~:/?#@!$&'*+,;=%";
++char *
++findlast(char *str, const char* find)
++{
++	char* found = NULL;
++	for(found = str + strlen(str) - 1; found >= str; --found) {
++		if(strncmp(found, find, strlen(find)) == 0) {
++			return found;
++		}
++	}
 +
-+		if(sel.oe.x >= 0 && sel.ob.x >= 0)
-+	       tsetcolor( sel.nb.y, sel.ob.x, sel.oe.x + 1, defaultfg, defaultbg );
-+
-+       int i, row, startrow;
-+       char *linestr = calloc(sizeof(char), term.col+1); /* assume ascii */
-+       char *c, *match = NULL;
-+
-+       row = (sel.ob.x >= 0 && sel.nb.y > 0) ? sel.nb.y-1 : term.bot;
-+       LIMIT(row, term.top, term.bot);
-+       startrow = row;
-+
-+       /* find the start of the last url before selection */
-+       do {
-+               for (i = 0; i < term.col; ++i) {
-+                       if (term.line[row][i].u > 127) /* assume ascii */
-+                               continue;
-+                       linestr[i] = term.line[row][i].u;
-+               }
-+               linestr[term.col] = '\0';
-+               if ((match = strstr(linestr, "http://"))
-+                               || (match = strstr(linestr, "https://")))
-+                       break;
-+               if (--row < term.top)
-+                       row = term.bot;
-+       } while (row != startrow);
-+
-+       if (match) {
-+               /* must happen before trim */
-+               selclear();
-+               sel.ob.x = strlen(linestr) - strlen(match);
-+
-+               /* trim the rest of the line from the url match */
-+               for (c = match; *c != '\0'; ++c)
-+                       if (!strchr(URLCHARS, *c)) {
-+                               *c = '\0';
-+                               break;
-+                       }
-+
-+               tsetcolor( row, sel.ob.x, sel.ob.x + strlen( match ), defaultbg, defaultfg );
-+
-+               /* select and copy */
-+               sel.mode = 1;
-+               sel.type = SEL_REGULAR;
-+               sel.oe.x = sel.ob.x + strlen(match)-1;
-+               sel.ob.y = sel.oe.y = row;
-+               selnormalize();
-+               tsetdirt(sel.nb.y, sel.ne.y);
-+               xsetsel(getsel());
-+               xclipcopy();
-+       }
-+
-+       free(linestr);
++	return NULL;
 +}
 +
---- st.h	2018-05-13 03:57:49.664660772 +0100
-+++ st.h	2018-05-13 03:58:09.205231789 +0100
++/*
++** Select and copy the previous url on screen (do nothing if there's no url).
++**
++** FIXME: doesn't handle urls that span multiple lines; will need to add support
++**        for multiline "getsel()" first
++*/
++void
++copyurl(const Arg *arg) {
++	/* () and [] can appear in urls, but excluding them here will reduce false
++	 * positives when figuring out where a given url ends.
++	 */
++	static char URLCHARS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
++		"abcdefghijklmnopqrstuvwxyz"
++		"0123456789-._~:/?#@!$&'*+,;=%";
++
++	/* remove highlighting from previous selection if any */
++	if(sel.ob.x >= 0 && sel.oe.x >= 0)
++		tsetcolor(sel.nb.y, sel.ob.x, sel.oe.x + 1, defaultfg, defaultbg);
++
++	int i = 0,
++		row = 0,
++		col = 0,
++		startrow = 0,
++		colend = 0;
++
++	char *linestr = calloc(sizeof(char), term.col+1); /* assume ascii */
++	char *c = NULL,
++		 *match = NULL;
++
++	row = (sel.ob.x >= 0 && sel.nb.y > 0) ? sel.nb.y : term.bot;
++	LIMIT(row, term.top, term.bot);
++	startrow = row;
++
++	colend = (sel.ob.x >= 0 && sel.nb.y > 0) ? sel.nb.x : term.col;
++	LIMIT(colend, 0, term.col);
++
++	/*
++ 	** Scan from (term.bot,term.col) to (0,0) and find
++	** next occurrance of a URL
++	*/
++	do {
++		/* Read in each column of every row until
++ 		** we hit previous occurrence of URL
++		*/
++		for (col = 0, i = 0; col < colend; ++col,++i) {
++			/* assume ascii */
++			if (term.line[row][col].u > 127)
++				continue;
++			linestr[i] = term.line[row][col].u;
++		}
++		linestr[term.col] = '\0';
++
++		if ((match = findlast(linestr, "http://"))
++			|| (match = findlast(linestr, "https://")))
++			break;
++
++		if (--row < term.top)
++			row = term.bot;
++
++		colend = term.col;
++	} while (row != startrow);
++
++	if (match) {
++		/* must happen before trim */
++		selclear();
++		sel.ob.x = strlen(linestr) - strlen(match);
++
++		/* trim the rest of the line from the url match */
++		for (c = match; *c != '\0'; ++c)
++			if (!strchr(URLCHARS, *c)) {
++				*c = '\0';
++				break;
++			}
++
++		/* highlight selection by inverting terminal colors */
++		tsetcolor(row, sel.ob.x, sel.ob.x + strlen( match ), defaultbg, defaultfg);
++
++		/* select and copy */
++		sel.mode = 1;
++		sel.type = SEL_REGULAR;
++		sel.oe.x = sel.ob.x + strlen(match)-1;
++		sel.ob.y = sel.oe.y = row;
++		selnormalize();
++		tsetdirt(sel.nb.y, sel.ne.y);
++		xsetsel(getsel());
++		xclipcopy();
++	}
++
++	free(linestr);
++}
+--- st.h	2018-05-20 11:40:02.524909358 +0100
++++ st.h	2018-05-20 11:52:58.764944938 +0100
 @@ -85,6 +85,7 @@
  void printsel(const Arg *);
  void sendbreak(const Arg *);
