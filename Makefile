@@ -44,6 +44,14 @@ patch:
 	patch -p0 < vertcenter.diff
 	patch -p0 < copyurl.diff
 
+unpatch:
+	patch -p0 -R < copyurl.diff
+	patch -p0 -R < vertcenter.diff
+	patch -p0 -R < delkey.diff
+	patch -p0 -R < customization.diff
+	patch -p0 -R < clipboard.diff
+
+
 dist: clean
 	mkdir -p st-$(VERSION)
 	cp -R FAQ LEGACY TODO LICENSE Makefile README config.mk\
