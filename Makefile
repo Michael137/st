@@ -44,6 +44,7 @@ patch:
 	patch -p0 < vertcenter.diff
 	patch -p0 < copyurl.diff
 	patch -p0 < scrollback.diff
+	patch -p0 < openurl.diff
 
 unpatch:
 	patch -p0 -R < scrollback.diff
@@ -52,6 +53,7 @@ unpatch:
 	patch -p0 -R < delkey.diff
 	patch -p0 -R < customization.diff
 	patch -p0 -R < clipboard.diff
+	patch -p0 -R < openurl.diff
 
 
 dist: clean

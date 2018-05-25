@@ -1,0 +1,48 @@
+--- st.h	2018-05-25 01:58:43.482229725 +0100
++++ st.h	2018-05-25 01:56:33.343048235 +0100
+@@ -86,6 +86,7 @@
+ void draw(void);
+ 
+ void iso14755(const Arg *);
++void opencopied(const Arg *);
+ void printscreen(const Arg *);
+ void printsel(const Arg *);
+ void sendbreak(const Arg *);
+--- config.def.h	2018-05-25 01:58:43.482229725 +0100
++++ config.def.h	2018-05-25 01:56:10.829274817 +0100
+@@ -181,6 +181,7 @@
+ 	{ MODKEY,               XK_c,           copyurl,        {.i =  0} },
+ 	{ ShiftMask,            XK_Page_Up,     kscrollup,      {.i = -1} },
+ 	{ ShiftMask,            XK_Page_Down,   kscrolldown,    {.i = -1} },
++	{ MODKEY,               XK_o,           opencopied,     {.v = "xdg-open"} }
+ };
+ 
+ /*
+--- x.c	2018-05-25 01:58:43.468896136 +0100
++++ x.c	2018-05-25 01:57:17.587241864 +0100
+@@ -1953,3 +1953,25 @@
+ 
+ 	return 0;
+ }
++
++void
++opencopied(const Arg *arg)
++{
++	const size_t max_cmd = 2048;
++	const char *clip = xsel.clipboard;
++	if(!clip) {
++		fprintf(stderr, "Warning: nothing copied to clipboard\n");
++		return;
++	}
++
++	/* account for space/quote (3) and \0 (1) */
++	char cmd[max_cmd + strlen(clip) + 4];
++	strncpy(cmd, (char *)arg->v, max_cmd);
++	cmd[max_cmd] = '\0';
++
++	strcat(cmd, " \"");
++	strcat(cmd, clip);
++	strcat(cmd, "\"");
++
++	system(cmd);
++}
