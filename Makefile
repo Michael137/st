@@ -45,6 +45,7 @@ patch:
 	patch -p0 < copyurl.diff
 	patch -p0 < scrollback.diff
 	patch -p0 < openurl.diff
+	patch -p0 < line_snap_delimiter.diff
 
 unpatch:
 	patch -p0 -R < scrollback.diff
@@ -54,6 +55,7 @@ unpatch:
 	patch -p0 -R < customization.diff
 	patch -p0 -R < clipboard.diff
 	patch -p0 -R < openurl.diff
+	patch -p0 -R < line_snap_delimiter.diff
 
 
 dist: clean

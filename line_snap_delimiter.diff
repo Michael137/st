@@ -1,0 +1,69 @@
+diff --git a/config.def.h b/config.def.h
+index 82b1b09..9cc4cf6 100644
+--- a/config.def.h
++++ b/config.def.h
+@@ -33,6 +33,7 @@ static float chscale = 1.0;
+  * More advanced example: " `'\"()[]{}"
+  */
+ char *worddelimiters = " ";
++wchar_t *snap_line_delimiters = "|";
+ 
+ /* selection timeouts (in milliseconds) */
+ static unsigned int doubleclicktimeout = 300;
+diff --git a/st.c b/st.c
+index 0628707..4bf5f97 100644
+--- a/st.c
++++ b/st.c
+@@ -43,6 +43,7 @@
+ #define ISCONTROLC1(c)		(BETWEEN(c, 0x80, 0x9f))
+ #define ISCONTROL(c)		(ISCONTROLC0(c) || ISCONTROLC1(c))
+ #define ISDELIM(u)		(utf8strchr(worddelimiters, u) != NULL)
++#define IS_SNAP_LINE_DELIM(u) (u && wcschr(snap_line_delimiters, u))
+ 
+ /* constants */
+ #define ISO14755CMD		"dmenu -w \"$WINDOWID\" -p codepoint: </dev/null"
+@@ -578,12 +579,31 @@ selsnap(int *x, int *y, int direction)
+ 		}
+ 		break;
+ 	case SNAP_LINE:
++		/*
++		 * Don't snap past a line snap delimiter
++		 * (see 'snap_line_delimiters' in config.h)
++		 */
++		for(;;) {
++			newx = *x + direction;
++
++			if (!BETWEEN(newx, 0, term.col - 1)) {
++				break;
++			}
++
++			gp = &term.line[*y][newx];
++
++			if(IS_SNAP_LINE_DELIM(gp->u)) {
++				break;
++			}
++
++			*x = newx;
++		}
++
+ 		/*
+ 		 * Snap around if the the previous line or the current one
+ 		 * has set ATTR_WRAP at its end. Then the whole next or
+ 		 * previous line will be selected.
+ 		 */
+-		*x = (direction < 0) ? 0 : term.col - 1;
+ 		if (direction < 0) {
+ 			for (; *y > 0; *y += direction) {
+ 				if (!(term.line[*y-1][term.col-1].mode
+diff --git a/st.h b/st.h
+index dac64d8..029334a 100644
+--- a/st.h
++++ b/st.h
+@@ -116,6 +116,7 @@ extern char *utmp;
+ extern char *stty_args;
+ extern char *vtiden;
+ extern char *worddelimiters;
++extern wchar_t *snap_line_delimiters;
+ extern int allowaltscreen;
+ extern char *termname;
+ extern unsigned int tabspaces;
